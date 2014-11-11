@@ -3,8 +3,6 @@ package ua.yandex.atmtest;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.mockito.InOrder;
-import org.mockito.Matchers;
-import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 public class MyATMTest {
@@ -36,11 +34,10 @@ public class MyATMTest {
     @Test
     public void testCheckBalanceWithoutWithdrow() {
         Account account = mock(Account.class);
-        //when(account.getBalance()).thenReturn(anyDouble());
-
+       
         ATM atm = new MyATM(account);
         atm.checkBalance();
-        verify(account, times(0)).withdraw(anyDouble());
+        verify(account, never()).withdraw(anyDouble());
     }
 
     @Test
@@ -50,7 +47,9 @@ public class MyATMTest {
         Account account = mock(Account.class);
         when(account.getBalance()).thenReturn(moneyOnAccount);
 
-        ATM atm = new MyATM(account);
+        MyATM atm = new MyATM(account);
+        MyATM spyATM = spy(atm);
+        when(spyATM.isWorkingDay()).thenReturn(true);        
 
         assertFalse(atm.getCash(ammount));
     }
@@ -62,7 +61,9 @@ public class MyATMTest {
         Account account = mock(Account.class);
         when(account.getBalance()).thenReturn(moneyOnAccount);
 
-        ATM atm = new MyATM(account);
+        MyATM atm = new MyATM(account);
+        MyATM spyATM = spy(atm);
+        when(spyATM.isWorkingDay()).thenReturn(true);
 
         assertFalse(atm.getCash(ammount));
     }
@@ -74,7 +75,8 @@ public class MyATMTest {
         Account account = mock(Account.class);
         when(account.getBalance()).thenReturn(moneyOnAccount);
 
-        ATM atm = new MyATM(account);
+        MyATM atm = spy(new MyATM(account));       
+        when(atm.isWorkingDay()).thenReturn(true);
 
         assertTrue(atm.getCash(ammount));
     }
@@ -86,7 +88,8 @@ public class MyATMTest {
         Account account = mock(Account.class);
         when(account.getBalance()).thenReturn(moneyOnAccount);
 
-        ATM atm = new MyATM(account);
+        MyATM atm = spy(new MyATM(account));       
+        when(atm.isWorkingDay()).thenReturn(true);
 
         assertTrue(atm.getCash(ammount));
     }
@@ -98,19 +101,21 @@ public class MyATMTest {
         Account account = mock(Account.class);
         when(account.getBalance()).thenReturn(moneyOnAccount);
 
-        ATM atm = new MyATM(account);
+        MyATM atm = spy(new MyATM(account));       
+        when(atm.isWorkingDay()).thenReturn(true);
+        
         atm.getCash(ammount);
 
-        verify(account, times(1)).withdraw(ammount);
+        verify(account).withdraw(ammount);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetCashEqualsToZeroThrowException() {
         double ammount = 0;
-        Account account = mock(Account.class);
-        when(account.getBalance()).thenReturn(anyDouble());
 
-        ATM atm = new MyATM(account);
+        MyATM atm = spy(new MyATM(null));       
+        when(atm.isWorkingDay()).thenReturn(true);
+        
         atm.getCash(ammount);
     }
 
@@ -118,20 +123,40 @@ public class MyATMTest {
     public void testGetCashNegativeAmmountOfMoneyThrowException() {
         double ammount = -12.1;
 
-        ATM atm = new MyATM(null);
+        MyATM atm = spy(new MyATM(null));       
+        when(atm.isWorkingDay()).thenReturn(true);
+        
         atm.getCash(ammount);
     }
 
     @Test
     public void testGetCashMethodsCallsInCorrectOrder() {
+        double moneyOnAccount = 25.32;
+        double ammount = 10.6;
         Account account = mock(Account.class);
-        ATM atm = new MyATM(account);
-        double ammount = 10.6;        
-        when(account.getBalance()).thenReturn(ammount);
+        when(account.getBalance()).thenReturn(moneyOnAccount);
+        
+        MyATM atm = spy(new MyATM(account));       
+        when(atm.isWorkingDay()).thenReturn(true);
+        
         atm.getCash(ammount);
+        
         InOrder order = inOrder(account);
         order.verify(account, atLeastOnce()).getBalance();
-        order.verify(account, times(1)).withdraw(anyDouble());
+        order.verify(account).withdraw(anyDouble());
     }
 
+    
+    @Test
+    public void testGetCashReturnFalseAndDoesntCallWithdrowAtNotWorkingDays() {        
+        double ammount = 10.6;
+        Account account = mock(Account.class);
+                
+        MyATM atm = new MyATM(null);
+        MyATM spyATM = spy(atm);
+        when(spyATM.isWorkingDay()).thenReturn(false);
+        
+        assertFalse(spyATM.getCash(ammount));
+        verify(account, never()).withdraw(anyDouble());
+    }
 }
