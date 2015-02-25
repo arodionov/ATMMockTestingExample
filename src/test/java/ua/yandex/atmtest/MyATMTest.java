@@ -51,7 +51,7 @@ public class MyATMTest {
         MyATM spyATM = spy(atm);
         when(spyATM.isWorkingDay()).thenReturn(true);        
 
-        assertFalse(atm.getCash(ammount));
+        assertFalse(spyATM.getCash(ammount));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class MyATMTest {
         MyATM spyATM = spy(atm);
         when(spyATM.isWorkingDay()).thenReturn(true);
 
-        assertFalse(atm.getCash(ammount));
+        assertFalse(spyATM.getCash(ammount));
     }
 
     @Test
